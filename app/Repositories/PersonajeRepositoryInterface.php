@@ -1,12 +1,12 @@
-<?php 
+<?php
 
 namespace App\Repositories;
 
-use App\Models\Reserva;
-use Carbon\CarbonInterface;
+use App\Models\Personaje;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
-interface PersonajesRepositorieInterface{
+interface PersonajeRepositoryInterface
+{
     public function paginar(string $buscar = '', int $porPagina = 10): LengthAwarePaginator;
 
     public function crear(array $datos): Personaje;
@@ -17,5 +17,5 @@ interface PersonajesRepositorieInterface{
 
     public function buscarPorSwapiId(int $swapiId): ?Personaje;
 
-    public function existeSwapiId(int $swapiId): bool; 
+    public function existeSwapiId(int $swapiId): bool;
 }
