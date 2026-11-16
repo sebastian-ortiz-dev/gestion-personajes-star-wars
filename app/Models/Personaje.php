@@ -6,12 +6,14 @@ use Illuminate\Database\Eloquent\Model;
 
 class Personaje extends Model
 {
-    protected $fillable = ['nombre', 'altura', 'masa', 'color_cabello', 'color_ojos', 'genero', 'planeta_origen'];
+    protected $fillable = ['nombre', 'altura', 'masa', 'color_cabello', 'color_ojos', 'genero', 'planeta_origen', 'origen_swapi', 'swapi_id'];
 
-    protected function cast(): array {
+    protected function casts(): array {
         return[
-            'created_at' => 'datetime',
-            'update_at' => 'datetime',
+            'altura' => 'integer',
+            'masa' => 'integer',
+            'origen_swapi' => 'boolean',
+            'swapi_id' => 'integer',
         ];
     }
 }

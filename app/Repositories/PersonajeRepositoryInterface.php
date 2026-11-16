@@ -11,11 +11,11 @@ interface PersonajeRepositoryInterface
 
     public function crear(array $datos): Personaje;
 
-    public function actualizar(Personaje $personaje, array $datos): Personaje;
+    public function actualizar(int $id, array $datos): int;
 
-    public function eliminar(Personaje $personaje): void;
+    public function eliminar(int $id): int;
 
-    public function buscarPorSwapiId(int $swapiId): ?Personaje;
+    public function buscarPorId(int $id): ?Personaje;
 
     public function existeSwapiId(int $swapiId): bool;
 }
