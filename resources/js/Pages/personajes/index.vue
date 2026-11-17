@@ -14,7 +14,8 @@ const mostrarModal = ref(false);
 
 const importForm = useForm({ swapi_id: '' });
 
-const flash = computed(() => page.props.flash ?? {});
+const success = computed(() => page.props.flash?.success);
+const error = computed(() => page.props.flasj?.error);
 const lista = computed(() => props.personajes?.data ?? []);
 
 function filtrar() {
@@ -37,6 +38,7 @@ function importar() {
     importForm.post('/personajes/importar', {
         preserveScroll: true,
         onSuccess: () => {
+            importForm.reset();
             mostrarModal.value = false;
         },
     });
@@ -59,28 +61,22 @@ function eliminar(personaje) {
                 </div>
 
                 <div class="flex flex-col gap-2 sm:flex-row">
-                    <button
-                        type="button"
-                        class="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
-                        @click="abrirModal"
-                    >
+                    <button type="button" class="cursor-pointer rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50" @click="abrirModal">
                         Importar desde SWAPI
                     </button>
 
-                    <Link
-                        href="/personajes/crear"
-                        class="rounded-lg bg-slate-800 px-4 py-2 text-center text-sm font-medium text-white hover:bg-slate-700"
-                    >
+                    <Link href="/personajes/crear" class="rounded-lg bg-slate-800 px-4 py-2 text-center text-sm font-medium text-white hover:bg-slate-700" >
                         Crear Nuevo
                     </Link>
                 </div>
             </header>
 
-            <div
-                v-if="flash.success"
-                class="mb-4 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800"
-            >
-                {{ flash.success }}
+            <div v-if="success" class="mb-4 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
+                {{ success }}
+            </div>
+
+            <div v-if="error" class="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+                {{ error }}
             </div>
 
             <div class="mb-4">
@@ -89,12 +85,9 @@ function eliminar(personaje) {
                         v-model="buscar"
                         type="search"
                         placeholder="Buscar por nombre"
-                        class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none sm:max-w-sm"
+                        class="w-full bg-white rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none sm:max-w-sm"
                     >
-                    <button
-                        type="submit"
-                        class="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
-                    >
+                    <button type="submit" class="cursor-pointer rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50" >
                         Buscar
                     </button>
                 </form>
@@ -120,10 +113,7 @@ function eliminar(personaje) {
                                 <td class="px-4 py-3 text-slate-600">{{ personaje.masa ?? '—' }}</td>
                                 <td class="px-4 py-3 text-slate-600">{{ personaje.genero }}</td>
                                 <td class="px-4 py-3">
-                                    <span
-                                        class="rounded-full px-2 py-1 text-xs font-medium"
-                                        :class="personaje.origen_swapi ? 'bg-sky-100 text-sky-800' : 'bg-slate-100 text-slate-700'"
-                                    >
+                                    <span class="rounded-full px-2 py-1 text-xs font-medium" :class="personaje.origen_swapi ? 'bg-sky-100 text-sky-800' : 'bg-slate-100 text-slate-700'">
                                         {{ personaje.origen_swapi ? 'SWAPI' : 'Manual' }}
                                     </span>
                                 </td>
@@ -180,13 +170,7 @@ function eliminar(personaje) {
             </div>
         </div>
 
-        <div
-            v-if="mostrarModal"
-            class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 px-4"
-            role="dialog"
-            aria-modal="true"
-            @click.self="cerrarModal"
-        >
+        <div v-if="mostrarModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 px-4" role="dialog" aria-modal="true" @click.self="cerrarModal">
             <div class="w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
                 <h2 class="text-lg font-semibold text-slate-800">Importar desde SWAPI</h2>
                 <p class="mt-1 text-sm text-slate-500">
@@ -195,10 +179,7 @@ function eliminar(personaje) {
 
                 <form class="mt-4" @submit.prevent="importar">
                     <label for="swapi_id" class="block text-sm font-medium text-slate-700">ID de SWAPI</label>
-                    <input
-                        id="swapi_id"
-                        v-model="importForm.swapi_id"
-                        type="number"
+                    <input id="swapi_id" v-model="importForm.swapi_id" type="number"
                         min="1"
                         max="83"
                         required
@@ -209,23 +190,11 @@ function eliminar(personaje) {
                     </p>
 
                     <div class="mt-6 flex justify-end gap-2">
-                        <button
-                            type="button"
-                            class="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
-                            :disabled="importForm.processing"
-                            @click="cerrarModal"
-                        >
+                        <button type="button" class="cursor-pointer rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50" :disabled="importForm.processing" @click="cerrarModal">
                             Cancelar
                         </button>
-                        <button
-                            type="submit"
-                            class="flex items-center gap-2 rounded-lg bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 disabled:opacity-60"
-                            :disabled="importForm.processing"
-                        >
-                            <span
-                                v-if="importForm.processing"
-                                class="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white"
-                            />
+                        <button type="submit" class="cursor-pointer flex items-center gap-2 rounded-lg bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 disabled:opacity-60" :disabled="importForm.processing" >
+                            <span v-if="importForm.processing" class="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white"/>
                             {{ importForm.processing ? 'Importando…' : 'Importar' }}
                         </button>
                     </div>
