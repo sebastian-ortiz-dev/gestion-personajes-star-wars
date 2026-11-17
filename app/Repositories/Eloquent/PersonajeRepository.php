@@ -21,7 +21,7 @@ class PersonajeRepository implements PersonajeRepositoryInterface
             ->withQueryString();
     }
 
-    public function crear(array $datos): Personaje
+    public function crear(array $datos): ?Personaje
     {
         return $this->personaje::create($datos);
     }

@@ -15,7 +15,7 @@ const mostrarModal = ref(false);
 const importForm = useForm({ swapi_id: '' });
 
 const success = computed(() => page.props.flash?.success);
-const error = computed(() => page.props.flasj?.error);
+const error = computed(() => page.props.flash?.error);
 const lista = computed(() => props.personajes?.data ?? []);
 
 function filtrar() {

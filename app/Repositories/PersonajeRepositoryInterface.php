@@ -9,7 +9,7 @@ interface PersonajeRepositoryInterface
 {
     public function paginar(string $buscar = '', int $porPagina = 10): LengthAwarePaginator;
 
-    public function crear(array $datos): Personaje;
+    public function crear(array $datos): ?Personaje;
 
     public function actualizar(int $id, array $datos): int;
 

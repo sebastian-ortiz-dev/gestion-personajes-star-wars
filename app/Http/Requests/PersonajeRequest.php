@@ -28,7 +28,7 @@ class PersonajeRequest extends FormRequest
             'masa' => ['nullable', 'integer', 'min:1', 'max:500'],
             'color_cabello' => ['nullable', 'string', 'max:100'],
             'color_ojos' => ['nullable', 'string', 'max:100'],
-            'genero' => ['required', 'in: masculino, femenino, n/a'],
+            'genero' => ['required', 'in:masculino,femenino,n/a'],
             'planeta_origen' => ['nullable', 'string', 'max:100'],
         ];
     }
