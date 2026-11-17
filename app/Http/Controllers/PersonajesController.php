@@ -33,11 +33,31 @@ class PersonajesController extends Controller
 
     public function agregar(PersonajeRequest $request){
         $datos = $request->validated();
-        
+
         $success = $this->service->agregar($datos);
 
         if($success === true){
             return to_route('personajes.index')->with('success', 'Personaje importado correctamente.');
+        }else{
+            return to_route('personajes.index')->with("error", $success);
+        }
+    }
+
+    public function editar(int $id){
+        $success = $this->service->obtenerPorId($id);
+
+        return Inertia::render('personajes/editar',[
+            'personaje' => $success,
+        ]);
+    }
+
+    public function aplicarCambios(PersonajeRequest $request, $id){
+        $datos = $request->validated();
+
+        $success = $this->service->actualizarPersonaje($datos,(int) $id);
+
+        if($success === true){
+            return to_route('personajes.index')->with('success', 'Personaje actualizado correctamente.');
         }else{
             return to_route('personajes.index')->with("error", $success);
         }

@@ -160,6 +160,10 @@ function guardar(){
                         Limpiar
                     </button>
 
+                    <Link href="/personajes" class="cursor-pointer rounded-lg border border-slate-300 bg-white px-4 py-2 text-center text-sm font-medium text-slate-700 hover:bg-slate-50">
+                        Cancelar
+                    </Link>
+
                     <button type="submit" class="cursor-pointer rounded-lg bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 disabled:opacity-60" :disabled="form.processing">
                         {{ form.processing ? 'Guardando…' : 'Guardar' }}
                     </button>

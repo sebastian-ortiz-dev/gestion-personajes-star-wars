@@ -28,6 +28,25 @@ class PersonajeService
         }
     }
 
+    public function obtenerPorId(int $id){
+        try{
+            return $this->personajes->buscarPorId($id);
+        }catch(Exception $excep){
+            return 'No se encontro al personaje.';
+        }
+    } 
+
+    public function actualizarPersonaje(array $datos, int $id){
+        $afectado = $this->personajes->actualizar($id, $datos);
+        $personaje = $this->personajes->buscarPorId($id);
+        error_log('ID recibido: ' . $personaje);
+        if($afectado === 0){
+            return "Ha ocurrido un error al actualizar el personaje.";
+        }
+
+        return true;
+    }
+
     public function importarSwapi(int $id){
         // valida en db si ya existe
         $existe = $this->personajes->existeSwapiId($id);
