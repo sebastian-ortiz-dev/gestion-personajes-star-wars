@@ -60,7 +60,7 @@ function actualizar(){
                         <label for="nombre" class="block text-sm font-medium text-slate-700">
                             Nombre <span class="text-red-500">*</span>
                         </label>
-                        <input id="nombre"  v-model="form.nombre" type="text" required
+                        <input id="nombre" v-model="form.nombre" type="text" required
                             minlength="3"
                             maxlength="100"
                             placeholder="Luke Skywalker"
@@ -175,7 +175,7 @@ function actualizar(){
                     </Link>
 
                     <button type="submit" class="cursor-pointer rounded-lg bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 disabled:opacity-60" :disabled="form.processing">
-                        {{ form.processing ? 'Actualizando…' : 'actualizar' }}
+                        {{ form.processing ? 'Guardando…' : 'Actualizar' }}
                     </button>
                 </div>
             </form>

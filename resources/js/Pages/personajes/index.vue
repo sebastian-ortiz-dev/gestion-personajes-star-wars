@@ -10,6 +10,7 @@ const props = defineProps({
 const page = usePage();
 
 const buscar = ref(props.filtros?.buscar ?? '');
+const genero = ref(props.filtros?.genero ?? '');
 const mostrarModal = ref(false);
 
 const importForm = useForm({ swapi_id: '' });
@@ -19,7 +20,7 @@ const error = computed(() => page.props.flash?.error);
 const lista = computed(() => props.personajes?.data ?? []);
 
 function filtrar() {
-    router.get('/personajes', { buscar: buscar.value }, { preserveState: true, replace: true });
+    router.get('/personajes', { buscar: buscar.value, genero: genero.value }, { preserveState: true, replace: true });
 }
 
 function abrirModal() {
@@ -45,7 +46,7 @@ function importar() {
 }
 
 function eliminar(personaje) {
-    if (confirm(`¿Eliminar a ${personaje.nombre}? Esta acción no se puede deshacer.`)) {
+    if (confirm(`¿Eliminar a ${personaje.nombre}? Esta acción no se puede deshacer ¿Estas seguro?.`)) {
         router.delete(`/personajes/${personaje.id}`, { preserveScroll: true });
     }
 }
@@ -81,12 +82,13 @@ function eliminar(personaje) {
 
             <div class="mb-4">
                 <form class="flex gap-2" @submit.prevent="filtrar">
-                    <input
-                        v-model="buscar"
-                        type="search"
-                        placeholder="Buscar por nombre"
-                        class="w-full bg-white rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none sm:max-w-sm"
-                    >
+                    <input v-model="buscar" type="search" placeholder="Buscar por nombre" class="w-full bg-white rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none sm:max-w-sm">
+                    <select id="genero" v-model="genero" class="mt-1 w-48 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:border-slate-500 focus:outline-none">
+                        <option value="">Todos los géneros</option>
+                        <option value="masculino">Masculino</option>
+                        <option value="femenino">Femenino</option>
+                        <option value="n/a">n/a</option>
+                    </select>
                     <button type="submit" class="cursor-pointer rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50" >
                         Buscar
                     </button>
@@ -127,7 +129,7 @@ function eliminar(personaje) {
                                         </Link>
                                         <button
                                             type="button"
-                                            class="rounded-md border border-red-200 px-3 py-1 text-xs font-medium text-red-700 hover:bg-red-50"
+                                            class="cursor-pointer rounded-md border border-red-200 px-3 py-1 text-xs font-medium text-red-700 hover:bg-red-50"
                                             @click="eliminar(personaje)"
                                         >
                                             Eliminar

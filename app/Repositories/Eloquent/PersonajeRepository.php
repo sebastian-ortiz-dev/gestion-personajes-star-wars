@@ -12,11 +12,12 @@ class PersonajeRepository implements PersonajeRepositoryInterface
     { 
     }
 
-    public function paginar(string $buscar = '', int $porPagina = 10): LengthAwarePaginator
+    public function paginar(string $buscar = '',string $genero = '', int $porPagina = 10): LengthAwarePaginator
     {
         return $this->personaje::query()
             ->when($buscar != '', fn ($query) => $query->where('nombre', 'like', "{$buscar}%"))
-            ->orderBy('id')
+            ->when($genero != '', fn ($query) => $query->where('genero', $genero))
+            ->orderByDesc('id')
             ->paginate($porPagina)
             ->withQueryString();
     }

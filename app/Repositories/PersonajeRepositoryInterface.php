@@ -7,7 +7,7 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 interface PersonajeRepositoryInterface
 {
-    public function paginar(string $buscar = '', int $porPagina = 10): LengthAwarePaginator;
+    public function paginar(string $buscar = '', string $genero = '', int $porPagina = 10): LengthAwarePaginator;
 
     public function crear(array $datos): ?Personaje;
 

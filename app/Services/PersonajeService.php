@@ -5,8 +5,8 @@ namespace App\Services;
 use App\Models\Personaje;
 use App\Repositories\PersonajeRepositoryInterface;
 use App\Helpers\Helpers;
-use Illuminate\Http\Client\ConnectionException;
-use Illuminate\Support\Facades\Log;
+use Exception;
+use App\Exceptions\Exception\PersonajesException;
 use Illuminate\Support\Facades\Http;
 
 class PersonajeService 
@@ -15,61 +15,64 @@ class PersonajeService
     {   
     }
 
-    public function listar(string $buscar){
-        return $this->personajes->paginar($buscar);
+    public function listar(string $buscar, string $genero){
+        return $this->personajes->paginar($buscar, $genero);
     }
 
     public function agregar(array $datos){
         try{
             $this->personajes->crear($datos);
-            return true;
+            return;
         }catch(Exception $excep){
-            return 'Ocurrio un error al crear el personaje.';
+            throw new PersonajesException('No se pudo crear el personaje. Inténtalo nuevamente.');
         }
     }
 
     public function obtenerPorId(int $id){
-        try{
-            return $this->personajes->buscarPorId($id);
-        }catch(Exception $excep){
-            return 'No se encontro al personaje.';
-        }
+        return $this->personajes->buscarPorId($id);
     } 
 
     public function actualizarPersonaje(array $datos, int $id){
         $afectado = $this->personajes->actualizar($id, $datos);
-        $personaje = $this->personajes->buscarPorId($id);
-        error_log('ID recibido: ' . $personaje);
+
         if($afectado === 0){
-            return "Ha ocurrido un error al actualizar el personaje.";
+            throw new PersonajesException("No se pudo guardar los cambios. Inténtalo nuevamente.");
         }
 
-        return true;
+        return;
+    }
+
+    public function eliminarPersonaje(int $id){
+        $afectado = $this->personajes->eliminar($id);
+
+        if($afectado === 0){
+            throw new PersonajesException("No se pudo eliminar el personaje. Recarga la página e inténtalo otra vez.");
+        }
+
+        return;
     }
 
     public function importarSwapi(int $id){
-        // valida en db si ya existe
         $existe = $this->personajes->existeSwapiId($id);
 
         if($existe){
-            return "El id ya fue importado";
+            throw new PersonajesException("Ese personaje ya está importado.");
         }
 
         try{
             $response = Http::timeout(10)->get("https://swapi.py4e.com/api/people/{$id}/");
         }catch(Exception $e){
-            return "Error al consultar la Api";
+            throw new PersonajesException("No se pudo conectar con SWAPI. Revisa tu conexión e inténtalo de nuevo.");
         }
 
         if($response->status() == 404){
-            return "No se encontro el personaje con ese id";
+            throw new PersonajesException("No existe un personaje con el ID {$id} en SWAPI. Verifica que esté entre 1 y 83.");
         }
 
         if($response->failed()){
-            return 'Ocurrio un error al consultar la Api';
+            throw new PersonajesException('SWAPI respondió con un error. Inténtalo más tarde.');
         }
 
-        // obtenemos la respuesta
         $personajeApi = $response->json();
 
         $AlturaMasa = $this->helper->verificarAlturaMasa($personajeApi["height"], $personajeApi["mass"]);
@@ -82,11 +85,14 @@ class PersonajeService
 
         $genero = $mapaGenero[strtolower($personajeApi['gender'] )] ?? 'n/a';
 
-        // mapeamos
         $mapear = ["nombre" => $personajeApi['name'], "altura" => $AlturaMasa[0], "masa" => $AlturaMasa[1], "color_cabello" => $personajeApi['hair_color'], 'color_ojos' => $personajeApi['eye_color'], "genero" => $genero, "origen_swapi" => true, "swapi_id" => $id];
         
-        $this->personajes->crear($mapear);
+        try{
+            $this->personajes->crear($mapear);
+        }catch(Exception $e){
+            throw new PersonajesException('No se pudo crear el personaje importado. Inténtalo nuevamente.');
+        }
 
-        return true;
+        return;
     }
 }

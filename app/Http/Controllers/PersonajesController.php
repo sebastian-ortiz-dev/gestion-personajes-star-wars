@@ -2,12 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Exceptions\SwapiException;
 use App\Http\Requests\ImportPersonajeRequest;
 use App\Http\Requests\PersonajeRequest;
-use App\Models\Personaje;
-use App\Repositories\PersonajeRepositoryInterface;
 use App\Services\PersonajeService;
+use App\Exceptions\Exception\PersonajesException;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -18,12 +16,12 @@ class PersonajesController extends Controller
 
     public function index(Request $request){
         $buscar = trim((string) $request->query('buscar', ''));
-
-        $personajes = $this->service->listar($buscar);
+        $genero = trim((string) $request->query('genero', ''));
+        $personajes = $this->service->listar($buscar, $genero);
 
         return Inertia::render('personajes/index', [
             'personajes' => $personajes,
-            'filtros' => ['buscar' => $buscar],
+            'filtros' => ['buscar' => $buscar, 'genero' => $genero],
         ]);
     }
 
@@ -32,47 +30,60 @@ class PersonajesController extends Controller
     }
 
     public function agregar(PersonajeRequest $request){
-        $datos = $request->validated();
-
-        $success = $this->service->agregar($datos);
-
-        if($success === true){
-            return to_route('personajes.index')->with('success', 'Personaje importado correctamente.');
-        }else{
-            return to_route('personajes.index')->with("error", $success);
+        try{
+            $datos = $request->validated();
+            $this->service->agregar($datos);
+        }catch(PersonajesException $e){
+            return to_route('personajes.index')->with("error", $e->getMessage());
         }
+
+        return to_route('personajes.index')->with('success', 'Personaje creado correctamente.');
     }
 
     public function editar(int $id){
-        $success = $this->service->obtenerPorId($id);
+        $personaje = $this->service->obtenerPorId($id);
+
+        if($personaje == null){
+            return to_route('personajes.index')->with('error', 'No existe ese personaje');
+        }
 
         return Inertia::render('personajes/editar',[
-            'personaje' => $success,
+            'personaje' => $personaje,
         ]);
     }
 
     public function aplicarCambios(PersonajeRequest $request, $id){
-        $datos = $request->validated();
-
-        $success = $this->service->actualizarPersonaje($datos,(int) $id);
-
-        if($success === true){
-            return to_route('personajes.index')->with('success', 'Personaje actualizado correctamente.');
-        }else{
-            return to_route('personajes.index')->with("error", $success);
+        try{
+            $datos = $request->validated();
+        
+            $this->service->actualizarPersonaje($datos,(int) $id);
+        }catch(PersonajesException $e){
+            return to_route('personajes.index')->with("error", $e->getMessage());
         }
+
+        return to_route('personajes.index')->with('success', 'Personaje actualizado correctamente.');
+    }
+
+    public function borrar($id){
+        try{
+            $this->service-> eliminarPersonaje((int) $id);
+        }catch(PersonajesException $e){
+            return to_route('personajes.index')->with("error", $e->getMessage());
+        }
+
+        return to_route('personajes.index')->with('success', 'Personaje Eliminado.');
     }
 
     public function importar(ImportPersonajeRequest $request){
-        $datos = $request->validated();
-        $id = $datos['swapi_id'];
+        try{
+            $datos = $request->validated();
+            $id = $datos['swapi_id'];
 
-        $success = $this->service->importarSwapi($id);
-
-        if($success === true){
-            return to_route('personajes.index')->with('success', 'Personaje importado correctamente.');
-        }else{
-            return back()->with("error", $success);
+            $success = $this->service->importarSwapi($id);
+        }catch(PersonajesException $e){
+            return back()->with("error", $e->getMessage());
         }
+
+        return to_route('personajes.index')->with('success', 'Personaje importado correctamente.');
     }
 }
