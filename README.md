@@ -241,7 +241,7 @@ Validé cada aporte ejecutando el flujo completo en local y leyendo el código a
 
 **8/10.** Lo mejor es la separación de responsabilidades: el controlador no tiene lógica de negocio ni consultas, la validación está en un único lugar y la importación contempla los casos sucios de la API sin romper el flujo. También la normalización de datos, que es la parte que suele fallar en silencio.
 
-No me pongo más porque faltan pruebas automatizadas y el manejo de errores es funcional pero mejorable: los mensajes del service son strings en lugar de excepciones tipadas, y no hay logs de las fallas de la API.
+No me pongo más porque las fallas de SWAPI no se registran en el log: el usuario ve un mensaje claro, pero no queda rastro técnico para diagnosticar. Además, la búsqueda es por prefijo y no en cualquier posición del nombre.
 
 ### 9. Tiempo invertido
 
