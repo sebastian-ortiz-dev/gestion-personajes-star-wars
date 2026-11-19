@@ -12,7 +12,7 @@ Construida con Laravel, Inertia.js, Vue 3 (Composition API) y Tailwind CSS.
 
 ## Requisitos del Sistema
 
-- PHP 8.2 o superior
+- PHP 8.1 o superior
 - Composer 2
 - Node.js 20.19 o superior (requerido por Vite 7)
 - MySQL 8 o superior
@@ -81,6 +81,18 @@ http://localhost:8000/personajes
 
 La raíz `/` redirige a `/personajes`.
 
+## Pruebas
+
+La suite corre sobre SQLite en memoria (`phpunit.xml`), así que no toca la base de desarrollo:
+
+```bash
+php artisan test
+```
+
+Son 27 feature tests: CRUD, límites de validación, paginación, filtros e importación con `Http::fake()` (duplicado, 404, error HTTP, API caída y los datos sucios de SWAPI).
+
+Para ejecutar solo un archivo: `php artisan test tests/Feature/PersonajesTest.php`.
+
 ## Funcionalidades Implementadas
 
 ### Obligatorias
@@ -93,14 +105,16 @@ La raíz `/` redirige a `/personajes`.
 - Eliminación con confirmación previa.
 - Importación desde SWAPI mediante modal, con campo de ID (1–83), spinner de carga y mensajes de éxito o error.
 - Validaciones en backend con Form Requests.
-- Componentes Vue reutilizables: `PersonajeForm.vue` e `ImportModal.vue`.
+- Componentes Vue reutilizables: `InputsForm.vue`, `ListarPersonajes.vue` y `Modal.vue`.
 - Diseño responsive (tabla con scroll horizontal en móvil y formularios de una columna).
 
 ### Bonus implementados
 
 - **Service Layer:** `PersonajeService` concentra la lógica de negocio.
 - **Repository Pattern:** interfaz `PersonajeRepositoryInterface` con implementación Eloquent, resuelta por inyección de dependencias.
+- **Pruebas automatizadas:** 27 feature tests que cubren el CRUD, los límites de validación, la paginación, los filtros y la importación con `Http::fake()`.
 - **Búsqueda por nombre** en el listado.
+- **Filtro por género** combinado con la búsqueda.
 
 ## Rutas
 
@@ -118,6 +132,7 @@ La raíz `/` redirige a `/personajes`.
 
 ```
 app/
+├── Exceptions/Exception/PersonajesException.php   Errores de negocio
 ├── Helpers/Helpers.php                  Normalización de altura y masa de SWAPI
 ├── Http/
 │   ├── Controllers/PersonajesController.php
@@ -133,9 +148,10 @@ app/
 └── Services/PersonajeService.php
 
 resources/js/
-├── Components/
-│   ├── PersonajeForm.vue                 Formulario compartido por crear y editar
-│   └── ImportModal.vue                   Modal de importación desde SWAPI
+├── components/
+│   ├── InputsForm.vue                    Formulario compartido por crear y editar
+│   ├── ListarPersonajes.vue              Tabla, acciones y paginación
+│   └── Modal.vue                         Modal de importación desde SWAPI
 └── Pages/personajes/
     ├── index.vue
     ├── crear.vue
@@ -192,16 +208,17 @@ Usé Service + Repository porque permite sustituir la fuente de datos sin tocar 
 
 ### 2. Componentes Vue
 
-Creé dos:
+Creé tres componentes reutilizables en `resources/js/components/`:
 
-- **`PersonajeForm.vue`**: los siete campos del personaje, los errores de validación y los botones de acción. Recibe el objeto `useForm()` como prop y emite `guardar`; la página decide si hace `post` o `put`. Un prop `modo` cambia el texto del botón (**Guardar** / **Actualizar**).
-- **`ImportModal.vue`**: el modal con el campo de ID, el spinner y los mensajes. Recibe `mostrar` y emite `cerrar`, y maneja su propio `useForm` porque su envío es independiente del listado.
+- **`InputsForm.vue`**: los siete campos del personaje, sus validaciones HTML y los errores del backend bajo cada campo. Recibe el `form` de `useForm()` como prop y no sabe si la página hará `post` o `put`, por eso sirve igual en crear y editar.
+- **`ListarPersonajes.vue`**: la tabla con las filas, los botones Editar/Eliminar, el estado vacío y la paginación. Recibe `lista` y `personajes`, y resuelve el borrado con confirmación.
+- **`Modal.vue`**: el modal de importación con el campo de ID, el estado de carga y los mensajes. Recibe `importForm` y emite `importarId` y `cerrar`; el envío lo controla la página.
 
-Son reutilizables porque no dependen de la página: no acceden a props del controlador ni a rutas concretas, toda la variación entra por props y toda la acción sale por eventos. `PersonajeForm` se usa en dos páginas y `ImportModal` podría moverse a cualquier otra vista sin cambios.
+Son reutilizables porque no conocen rutas ni props del controlador: todo entra por props y las acciones salen por eventos. `InputsForm` ya se usa en dos páginas y `Modal` podría llevarse a cualquier otra vista sin cambios.
 
 ### 3. Manejo de errores de SWAPI
 
-La importación se valida primero en dos capas: `ImportPersonajeRequest` exige un entero entre 1 y 83 y `unique` sobre `swapi_id`, y el service consulta `existeSwapiId()` antes de gastar una petición. Después, la llamada usa `Http::timeout(10)` dentro de `try/catch`, y se distinguen los casos: excepción de conexión o timeout, respuesta 404, respuesta con error HTTP (`failed()`) y cualquier otro. Cada caso devuelve un mensaje en español que el controlador envía como flash; el listado lo muestra en un banner y el modal cierra su estado de carga. Ningún error de la API rompe la vista ni devuelve un 500.
+La importación se valida primero en dos capas: `ImportPersonajeRequest` exige un entero entre 1 y 83 y `unique` sobre `swapi_id`, y el service consulta `existeSwapiId()` antes de gastar una petición. Después, la llamada usa `Http::timeout(10)` dentro de `try/catch`, y se distinguen los casos: excepción de conexión o timeout, respuesta 404, respuesta con error HTTP (`failed()`) y cualquier otro. Cada caso lanza una `PersonajesException` con un mensaje en español; el controlador la captura, la convierte en un flash de error y el listado la muestra en un banner mientras el modal cierra su estado de carga. Ningún error de la API rompe la vista ni devuelve un 500.
 
 ### 4. Validaciones
 
@@ -232,11 +249,10 @@ Validé cada aporte ejecutando el flujo completo en local y leyendo el código a
 
 ### 7. Mejoras futuras
 
-- Pruebas automatizadas: feature tests para el CRUD y para la importación con `Http::fake()`, cubriendo 404, timeout y duplicado.
 - Docker Compose con MySQL y la aplicación, para levantar todo con un comando.
 - Seeder con personajes de ejemplo.
 - Comando Artisan para importar un rango de IDs de SWAPI de una vez.
-- Filtro por género y ordenamiento por columna en la tabla.
+- Ordenamiento por columna en la tabla.
 - Mensajes de validación en español con `lang/es`.
 - Importar `planeta_origen` consultando `homeworld` en una segunda petición.
 - Búsqueda con debounce en tiempo real en lugar de enviar el formulario.
@@ -245,7 +261,7 @@ Validé cada aporte ejecutando el flujo completo en local y leyendo el código a
 
 **8/10.** Lo mejor es la separación de responsabilidades: el controlador no tiene lógica de negocio ni consultas, la validación está en un único lugar y la importación contempla los casos sucios de la API sin romper el flujo. También la normalización de datos, que es la parte que suele fallar en silencio.
 
-No me pongo más porque faltan pruebas automatizadas y el manejo de errores es funcional pero mejorable: los mensajes del service son strings en lugar de excepciones tipadas, y no hay logs de las fallas de la API.
+No me pongo más porque las fallas de SWAPI no se registran en el log: el usuario ve un mensaje claro, pero no queda rastro técnico para diagnosticar. Además, la búsqueda es por prefijo y no en cualquier posición del nombre.
 
 ### 9. Tiempo invertido
 
