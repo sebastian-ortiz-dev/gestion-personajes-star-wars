@@ -12,7 +12,7 @@ Construida con Laravel, Inertia.js, Vue 3 (Composition API) y Tailwind CSS.
 
 ## Requisitos del Sistema
 
-- PHP 8.1 o superior
+- PHP 8.2 o superior
 - Composer 2
 - Node.js 20.19 o superior (requerido por Vite 7)
 - MySQL 8 o superior
@@ -22,8 +22,8 @@ Construida con Laravel, Inertia.js, Vue 3 (Composition API) y Tailwind CSS.
 1. Clonar el repositorio y entrar al proyecto:
 
 ```bash
-git clone [tu-repo]
-cd [nombre-proyecto]
+git clone https://github.com/sebastian-ortiz-dev/gestion-personajes-star-wars.git
+cd gestion-personajes-star-wars
 ```
 
 2. Instalar dependencias de PHP y de Node:
@@ -50,7 +50,7 @@ DB_HOST=127.0.0.1
 DB_PORT=3306
 DB_DATABASE="nombre de tu db"
 DB_USERNAME="nombre de usuario"
-DB_PASSWORD=
+DB_PASSWORD="contraseña de tu db"
 ```
 
 4. Ejecutar las migraciones (incluye las tablas de sesiones, caché y colas que usa el proyecto):
@@ -81,18 +81,6 @@ http://localhost:8000/personajes
 
 La raíz `/` redirige a `/personajes`.
 
-## Pruebas
-
-La suite corre sobre SQLite en memoria (`phpunit.xml`), así que no toca la base de desarrollo:
-
-```bash
-php artisan test
-```
-
-Son 27 feature tests: CRUD, límites de validación, paginación, filtros e importación con `Http::fake()` (duplicado, 404, error HTTP, API caída y los datos sucios de SWAPI).
-
-Para ejecutar solo un archivo: `php artisan test tests/Feature/PersonajesTest.php`.
-
 ## Funcionalidades Implementadas
 
 ### Obligatorias
@@ -106,7 +94,7 @@ Para ejecutar solo un archivo: `php artisan test tests/Feature/PersonajesTest.ph
 - Importación desde SWAPI mediante modal, con campo de ID (1–83), spinner de carga y mensajes de éxito o error.
 - Validaciones en backend con Form Requests.
 - Componentes Vue reutilizables: `InputsForm.vue`, `ListarPersonajes.vue` y `Modal.vue`.
-- Diseño responsive (tabla con scroll horizontal en móvil y formularios de una columna).
+- Diseño responsive.
 
 ### Bonus implementados
 
@@ -115,6 +103,12 @@ Para ejecutar solo un archivo: `php artisan test tests/Feature/PersonajesTest.ph
 - **Pruebas automatizadas:** 27 feature tests que cubren el CRUD, los límites de validación, la paginación, los filtros y la importación con `Http::fake()`.
 - **Búsqueda por nombre** en el listado.
 - **Filtro por género** combinado con la búsqueda.
+
+## Pruebas
+
+```bash
+php artisan test
+```
 
 ## Rutas
 
@@ -170,7 +164,7 @@ resources/js/
 
 ## Notas
 
-**Campos importados.** SWAPI devuelve más información de la que pide el esquema. Solo se mapean seis campos (`name`, `height`, `mass`, `hair_color`, `eye_color`, `gender`); `planeta_origen` se guarda en `null` porque el enunciado no incluye el planeta en el mapeo y obtenerlo requiere una segunda consulta a `homeworld`.
+**Campos importados.** SWAPI devuelve más información de la que pide el esquema. Solo se mapean seis campos (`name`, `height`, `mass`, `hair_color`, `eye_color`, `gender`); `planeta_origen` se guarda en `null` porque el enunciado no incluye el planeta en el mapeo.
 
 **Normalización de masa y altura.** SWAPI entrega ambos valores como texto y no siempre como enteros: `"72.2"`, `"unknown"`, `"n/a"` y valores con separador de miles como `"1,358"` (Jabba). `Helpers::verificarAlturaMasa()` elimina las comas, valida que el valor sea numérico, redondea y convierte a `int`; cualquier valor no numérico queda en `null`. Por eso un `72.2` se almacena como `72`: la columna es entera y el redondeo es intencional.
 
@@ -180,23 +174,9 @@ resources/js/
 
 **Duplicados.** Antes de consultar la API se verifica si el `swapi_id` ya existe, y la validación del request también lo comprueba con `unique`. La columna tiene índice `unique`.
 
-**Errores de SWAPI.** Las peticiones usan un timeout de 10 segundos y se distinguen cuatro casos con mensajes propios: sin conexión, respuesta 404 (ID inexistente), respuesta con error HTTP y personaje ya importado. Ningún fallo de la API produce un error 500 en la aplicación.
+**Errores de SWAPI.** Las peticiones usan un timeout de 10 segundos y se distinguen cuatro casos con mensajes propios. Ningún fallo de la API produce un error 500 en la aplicación.
 
 **Búsqueda.** Filtra por coincidencia al inicio del nombre (`LIKE 'texto%'`), no en cualquier posición. Se aplica junto a la paginación mediante `withQueryString()`.
-
-## Verificación Manual
-
-Recorrido rápido para comprobar el funcionamiento:
-
-1. `/personajes` muestra la tabla paginada y el botón **Importar desde SWAPI**.
-2. **Crear Nuevo** → guardar con el formulario vacío muestra los errores; con datos válidos aparece el mensaje de éxito y el registro.
-3. Editar un registro y guardar: los cambios se reflejan en el listado.
-4. Eliminar: pide confirmación y borra el registro.
-5. Importar el ID `1` (Luke Skywalker): se crea con badge SWAPI.
-6. Importar el mismo ID otra vez: mensaje de duplicado, sin crear un registro nuevo.
-7. Importar el ID `16` (Jabba): masa `1358`, género `n/a`.
-8. Importar el ID `99`: mensaje de ID inexistente.
-9. Apagar la red e importar: mensaje de error de conexión.
 
 ## DECISIONES TÉCNICAS
 
@@ -238,11 +218,12 @@ Lo resolví centralizando la conversión en `Helpers::verificarAlturaMasa()` (qu
 
 ### 6. Uso de Inteligencia Artificial
 
-Sí, usé un asistente de IA como apoyo, no para generar la aplicación completa. En concreto:
+Sí, usé un asistente de IA como apoyo (DeepSeek), no para generar la aplicación completa. En concreto:
 
 - Revisión de la arquitectura al separar Controller, Service y Repository.
 - Diagnóstico de errores de configuración al montar Vite e Inertia.
 - Contraste del mapeo de SWAPI, sobre todo la masa con comas y los géneros fuera del `enum`.
+- Generación de la suite de pruebas (`PersonajesTest` y `PersonajesBordeTest`); las ejecuté, revisé qué afirmaba cada caso y ajusté el código donde fallaban.
 - Revisión de redacción de los mensajes al usuario y de este README.
 
 Validé cada aporte ejecutando el flujo completo en local y leyendo el código antes de aceptarlo: crear con errores, crear válido, editar, eliminar, importar ID 1, 16, 99 y un duplicado, y cortar la red para probar el timeout. Lo que no entendía lo reescribí o lo descarté; el código que entregué puedo explicarlo y modificarlo en vivo.
@@ -252,17 +233,16 @@ Validé cada aporte ejecutando el flujo completo en local y leyendo el código a
 - Docker Compose con MySQL y la aplicación, para levantar todo con un comando.
 - Seeder con personajes de ejemplo.
 - Comando Artisan para importar un rango de IDs de SWAPI de una vez.
-- Ordenamiento por columna en la tabla.
+- ordenamiento por columna en la tabla.
 - Mensajes de validación en español con `lang/es`.
-- Importar `planeta_origen` consultando `homeworld` en una segunda petición.
-- Búsqueda con debounce en tiempo real en lugar de enviar el formulario.
+- Importar `planeta_origen`.
 
 ### 8. Autoevaluación
 
 **8/10.** Lo mejor es la separación de responsabilidades: el controlador no tiene lógica de negocio ni consultas, la validación está en un único lugar y la importación contempla los casos sucios de la API sin romper el flujo. También la normalización de datos, que es la parte que suele fallar en silencio.
 
-No me pongo más porque las fallas de SWAPI no se registran en el log: el usuario ve un mensaje claro, pero no queda rastro técnico para diagnosticar. Además, la búsqueda es por prefijo y no en cualquier posición del nombre.
+No me pongo más porque faltan pruebas automatizadas y el manejo de errores es funcional pero mejorable: los mensajes del service son strings en lugar de excepciones tipadas, y no hay logs de las fallas de la API.
 
 ### 9. Tiempo invertido
 
-Aproximadamente **[X] horas**, distribuidas en configuración del proyecto y autenticación de Inertia, backend (modelo, migración, repositorio, service, requests), frontend (listado, formularios, modal, responsive), importación de SWAPI y esta documentación.
+Aproximadamente 9 horas, distribuidas en configuración del proyecto y autenticación de Inertia, backend (modelo, migración, repositorio, service, requests), frontend (listado, formularios, modal, responsive), importación de SWAPI y esta documentación.
